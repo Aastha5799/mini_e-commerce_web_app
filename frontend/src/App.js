@@ -2,6 +2,23 @@ import React, { useState } from 'react';
 import logo from './assets/logo.svg';
 
 
+const PRODUCTS = [
+  { id: 1, name: "Bohemian Maxi Dress", category: "Clothing", price: 79 },
+  { id: 2, name: "Sequin Party Dress", category: "Clothing", price: 99 },
+  { id: 3, name: "Silk Wrap Dress", category: "Clothing", price: 119 },
+  { id: 4, name: "Denim Overall Dress", category: "Clothing", price: 69 },
+  { id: 5, name: "Floral Summer Dress", category: "Clothing", price: 59 },
+  { id: 6, name: "Leather Jacket", category: "Accessories", price: 149 },
+  { id: 7, name: "Wide-Brim Sun Hat", category: "Accessories", price: 39 },
+  { id: 8, name: "Designer Handbag", category: "Accessories", price: 199 },
+  { id: 9, name: "Statement Earrings", category: "Accessories", price: 29 },
+  { id: 10, name: "Chunky Sneakers", category: "Footwear", price: 89 },
+  { id: 11, name: "Ankle Boots", category: "Footwear", price: 99 },
+  { id: 12, name: "Colorful Scarf", category: "Accessories", price: 25 },
+  { id: 13, name: "Elegant Evening Gown", category: "Clothing", price: 249 },
+  { id: 14, name: "Boho Chic Sandals", category: "Footwear", price: 49 },
+  { id: 15, name: "Trendy Sunglasses", category: "Accessories", price: 59 }
+];
 
 function App() {
   const [view, setView] = useState('home');
@@ -135,8 +152,8 @@ function App() {
     <div>
       <header className="d-flex justify-content-between align-items-center">
         <div className="d-flex align-items-center">
-          <img src={logo} alt="BubbleBuy Logo" style={{ height: '46px', marginRight: '16px' }} />
-          <h1 style={{ fontSize: '1.6rem', margin: 0 }}>BubbleBuy</h1>
+          <img src={logo} alt="Tiny Trolley Logo" style={{ height: '70px', marginRight: '16px' }} />
+          <h1 style={{ fontSize: '2.6rem', margin: 0 }}>Tiny Trolley</h1>
         </div>
         <nav>
           {['home', 'products', 'cart', 'checkout', 'auth'].map((v) => (
