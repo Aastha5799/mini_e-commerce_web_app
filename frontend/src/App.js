@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import logo from './assets/logo.svg';
-
 
 const PRODUCTS = [
   { id: 1, name: "Bohemian Maxi Dress", category: "Clothing", price: 79 },
@@ -21,17 +20,38 @@ const PRODUCTS = [
 ];
 
 function App() {
-  const [view, setView] = useState('home');
+  const [view, setView] = useState('auth'); // always start with auth
   const [cart, setCart] = useState([]);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [notice, setNotice] = useState('');
+  const [user, setUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [authMessage, setAuthMessage] = useState('');
+  const [authMode, setAuthMode] = useState('login'); // 'login' or 'register'
+
+  // Load users and current session from localStorage
+  useEffect(() => {
+    const savedUsers = JSON.parse(localStorage.getItem('users') || '[]');
+    const savedUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+    setUsers(savedUsers);
+    if (savedUser) {
+      setUser(savedUser);
+      setView('home'); // auto-login if session exists
+    }
+  }, []);
+
+  // Save current user session
+  useEffect(() => {
+    if (user) localStorage.setItem('currentUser', JSON.stringify(user));
+    else localStorage.removeItem('currentUser');
+  }, [user]);
+
+  // Save users list
+  useEffect(() => {
+    localStorage.setItem('users', JSON.stringify(users));
+  }, [users]);
 
   // Handlers
-  const handleViewProduct = (product) => {
-    setSelectedProduct(product);
-    setView('detail');
-  };
-
   const handleAddToCart = (product) => {
     setCart([...cart, { ...product, quantity: 1 }]);
     setNotice(`${product.name} added to cart!`);
@@ -42,12 +62,78 @@ function App() {
     setCart(cart.filter((item) => item.id !== id));
   };
 
-  // Components for different pages
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const username = form.username.value.trim();
+    const password = form.password.value;
+
+    if (!username || !password) {
+      setAuthMessage('Please enter both username and password.');
+      return;
+    }
+
+    const match = users.find(u => u.username === username && u.password === password);
+    if (!match) {
+      setAuthMessage('Account not found. Please register first.');
+      return;
+    }
+
+    setUser({ username });
+    setAuthMessage('');
+    setView('home');
+    form.reset();
+  };
+
+  const handleRegisterSubmit = (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const username = form.username.value.trim();
+    const password = form.password.value;
+    const confirm = form.confirm.value;
+
+    if (!username || !password || !confirm) {
+      setAuthMessage('Please fill out all fields.');
+      return;
+    }
+
+    if (password !== confirm) {
+      setAuthMessage('Passwords do not match.');
+      return;
+    }
+
+    if (users.some(u => u.username === username)) {
+      setAuthMessage('Username already exists. Please login.');
+      setAuthMode('login');
+      return;
+    }
+
+    const newUser = { username, password };
+    const nextUsers = [...users, newUser];
+    setUsers(nextUsers);
+    setUser({ username });
+    setAuthMessage('');
+    setView('home');
+    form.reset();
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setView('auth');
+    setAuthMode('login');
+  };
+
+  const handleViewProduct = (product) => {
+    setSelectedProduct(product);
+    setView('detail');
+  };
+
+  // Components
   const Home = () => (
     <div>
       <h2>Featured Products</h2>
       <div className="row">
-        {PRODUCTS.slice(0, 3).map((p) => (
+        {PRODUCTS.slice(0, 3).map(p => (
           <div className="col-md-4" key={p.id}>
             <div className="card p-3">
               <h5>{p.name}</h5>
@@ -66,7 +152,7 @@ function App() {
     <div>
       <h2>All Products</h2>
       <div className="row">
-        {PRODUCTS.map((p) => (
+        {PRODUCTS.map(p => (
           <div className="col-md-3" key={p.id}>
             <div className="card p-3">
               <h5>{p.name}</h5>
@@ -95,7 +181,7 @@ function App() {
     <div>
       <h2>Your Cart</h2>
       {cart.length === 0 && <p>Cart is empty</p>}
-      {cart.map((item) => (
+      {cart.map(item => (
         <div className="card p-3" key={item.id}>
           <h5>{item.name}</h5>
           <p>Price: ${item.price}</p>
@@ -133,36 +219,58 @@ function App() {
 
   const Auth = () => (
     <div>
-      <h2>Login / Signup</h2>
-      <p>No authentication yet, demo only</p>
-      <form className="mb-3">
-        <input className="form-control mb-2" placeholder="Username" />
-        <input className="form-control mb-2" type="password" placeholder="Password" />
-        <button className="btn btn-primary">Login</button>
-      </form>
-      <form>
-        <input className="form-control mb-2" placeholder="Username" />
-        <input className="form-control mb-2" type="password" placeholder="Password" />
-        <button className="btn btn-secondary">Signup</button>
-      </form>
+      <h2>{authMode === 'login' ? 'Login' : 'Register'}</h2>
+      {authMessage && <div className="notice">{authMessage}</div>}
+
+      {authMode === 'login' ? (
+        <form onSubmit={handleLoginSubmit}>
+          <input className="form-control mb-2" placeholder="Username" name="username" />
+          <input className="form-control mb-2" type="password" placeholder="Password" name="password" />
+          <button className="btn btn-primary">Login</button>
+          <p className="mt-2">
+            Don't have an account?{' '}
+            <button type="button" className="btn btn-link p-0" onClick={() => { setAuthMode('register'); setAuthMessage(''); }}>
+              Register
+            </button>
+          </p>
+        </form>
+      ) : (
+        <form onSubmit={handleRegisterSubmit}>
+          <input className="form-control mb-2" placeholder="Username" name="username" />
+          <input className="form-control mb-2" type="password" placeholder="Password" name="password" />
+          <input className="form-control mb-2" type="password" placeholder="Confirm Password" name="confirm" />
+          <button className="btn btn-secondary">Register</button>
+          <p className="mt-2">
+            Already have an account?{' '}
+            <button type="button" className="btn btn-link p-0" onClick={() => { setAuthMode('login'); setAuthMessage(''); }}>
+              Login
+            </button>
+          </p>
+        </form>
+      )}
     </div>
   );
 
   return (
     <div>
-      <header className="d-flex justify-content-between align-items-center">
-        <div className="d-flex align-items-center">
-          <img src={logo} alt="Tiny Trolley Logo" style={{ height: '70px', marginRight: '16px' }} />
-          <h1 style={{ fontSize: '2.6rem', margin: 0 }}>Tiny Trolley</h1>
-        </div>
-        <nav>
-          {['home', 'products', 'cart', 'checkout', 'auth'].map((v) => (
-            <button key={v} className="btn btn-link text-white" onClick={() => setView(v)}>
-              {v.charAt(0).toUpperCase() + v.slice(1)}
+      {user && (
+        <header className="d-flex justify-content-between align-items-center">
+          <div className="d-flex align-items-center">
+            <img src={logo} alt="Tiny Trolley Logo" style={{ height: '70px', marginRight: '16px' }} />
+            <h1 style={{ fontSize: '2.6rem', margin: 0 }}>Tiny Trolley</h1>
+          </div>
+          <nav>
+            {['home', 'products', 'cart', 'checkout'].map(v => (
+              <button key={v} className="btn btn-link text-white" onClick={() => setView(v)}>
+                {v.charAt(0).toUpperCase() + v.slice(1)}
+              </button>
+            ))}
+            <button className="btn btn-link text-white" onClick={handleLogout}>
+              Logout ({user.username})
             </button>
-          ))}
-        </nav>
-      </header>
+          </nav>
+        </header>
+      )}
 
       <div className="container">
         {notice && <div className="notice">{notice}</div>}
