@@ -3,17 +3,19 @@ import "./App.css";
 
 const API = "http://127.0.0.1:8000/api";
 
-// Helper — adds token to every request automatically
+// Helper — adds JWT access token to every request
 const authFetch = (url, options = {}) => {
-  const token = localStorage.getItem("token");
-  return fetch(url, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Token ${token}` } : {}),
-      ...options.headers,
-    },
-  });
+  const token = localStorage.getItem("access");
+  
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  if (token) {
+    headers["Authorization"] = "Bearer " + token;
+  }
+
+  return fetch(url, { ...options, headers });
 };
 
 function App() {
@@ -28,16 +30,11 @@ function App() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [orders, setOrders] = useState([]);
 
-  // ── On load: check if already logged in ──
   useEffect(() => {
     const savedUser = localStorage.getItem("username");
-    if (savedUser) {
-      setUser(savedUser);
-      setView("home");
-    }
+    if (savedUser) { setUser(savedUser); setView("home"); }
   }, []);
 
-  // ── Fetch products ──
   useEffect(() => {
     fetch(`${API}/products/`)
       .then((r) => r.json())
@@ -45,7 +42,6 @@ function App() {
       .catch(() => setLoading(false));
   }, []);
 
-  // ── Fetch cart from Django (only when logged in) ──
   useEffect(() => {
     if (user) fetchCart();
   }, [user]);
@@ -62,7 +58,6 @@ function App() {
     setTimeout(() => setNotice(""), 2500);
   };
 
-  // ── Add to cart ──
   const addToCart = (product) => {
     authFetch(`${API}/cart/`, {
       method: "POST",
@@ -72,7 +67,6 @@ function App() {
       .then(() => { fetchCart(); showNotice(`${product.name} added to cart! 🛒`); });
   };
 
-  // ── Update quantity ──
   const updateQty = (itemId, quantity) => {
     if (quantity < 1) return;
     authFetch(`${API}/cart/${itemId}/`, {
@@ -81,13 +75,10 @@ function App() {
     }).then(() => fetchCart());
   };
 
-  // ── Remove from cart ──
   const removeFromCart = (itemId) => {
-    authFetch(`${API}/cart/${itemId}/`, { method: "DELETE" })
-      .then(() => fetchCart());
+    authFetch(`${API}/cart/${itemId}/`, { method: "DELETE" }).then(() => fetchCart());
   };
 
-  // ── Place order ──
   const placeOrder = () => {
     authFetch(`${API}/orders/`, { method: "POST" })
       .then((r) => r.json())
@@ -99,14 +90,12 @@ function App() {
       });
   };
 
-  // ── Fetch orders ──
   const fetchOrders = () => {
     authFetch(`${API}/orders/`)
       .then((r) => r.json())
       .then(setOrders);
   };
 
-  // ── Login ──
   const handleLogin = (e) => {
     e.preventDefault();
     const { username, password } = e.target;
@@ -117,8 +106,9 @@ function App() {
     })
       .then((r) => r.json())
       .then((data) => {
-        if (data.token) {
-          localStorage.setItem("token", data.token);
+        if (data.access) {
+          localStorage.setItem("access", data.access);
+          localStorage.setItem("refresh", data.refresh);
           localStorage.setItem("username", data.username);
           setUser(data.username);
           setView("home");
@@ -129,7 +119,6 @@ function App() {
       });
   };
 
-  // ── Register ──
   const handleRegister = (e) => {
     e.preventDefault();
     const { username, password, confirm } = e.target;
@@ -141,8 +130,9 @@ function App() {
     })
       .then((r) => r.json())
       .then((data) => {
-        if (data.token) {
-          localStorage.setItem("token", data.token);
+        if (data.access) {
+          localStorage.setItem("access", data.access);
+          localStorage.setItem("refresh", data.refresh);
           localStorage.setItem("username", data.username);
           setUser(data.username);
           setView("home");
@@ -153,10 +143,14 @@ function App() {
       });
   };
 
-  // ── Logout ──
   const handleLogout = () => {
-    authFetch(`${API}/auth/logout/`, { method: "POST" }).finally(() => {
-      localStorage.removeItem("token");
+    const refresh = localStorage.getItem("refresh");
+    authFetch(`${API}/auth/logout/`, {
+      method: "POST",
+      body: JSON.stringify({ refresh }),
+    }).finally(() => {
+      localStorage.removeItem("access");
+      localStorage.removeItem("refresh");
       localStorage.removeItem("username");
       setUser(null);
       setCart([]);
@@ -164,7 +158,6 @@ function App() {
     });
   };
 
-  // ── Reusable product card ──
   const ProductCard = ({ p }) => (
     <div className="card">
       <img src={p.image} alt={p.name} />
@@ -183,7 +176,6 @@ function App() {
   return (
     <div className="app">
 
-      {/* HEADER */}
       {user && (
         <header>
           <div className="logo">🛍️ <span>Tiny Trolley</span></div>
@@ -203,7 +195,6 @@ function App() {
 
       <main>
 
-        {/* HOME */}
         {view === "home" && (
           <div>
             <h2>Featured Products</h2>
@@ -215,7 +206,6 @@ function App() {
           </div>
         )}
 
-        {/* ALL PRODUCTS */}
         {view === "products" && (
           <div>
             <h2>All Products</h2>
@@ -227,7 +217,6 @@ function App() {
           </div>
         )}
 
-        {/* PRODUCT DETAIL */}
         {view === "detail" && selectedProduct && (
           <div className="detail">
             <button className="btn-outline back-btn" onClick={() => setView("products")}>← Back</button>
@@ -243,7 +232,6 @@ function App() {
           </div>
         )}
 
-        {/* CART */}
         {view === "cart" && (
           <div>
             <h2>Your Cart</h2>
@@ -275,7 +263,6 @@ function App() {
           </div>
         )}
 
-        {/* ORDERS */}
         {view === "orders" && (
           <div>
             <h2>My Orders</h2>
@@ -305,14 +292,12 @@ function App() {
           </div>
         )}
 
-        {/* AUTH */}
         {view === "auth" && (
           <div className="auth-page">
             <div className="auth-box">
               <div className="auth-logo">🛍️ Tiny Trolley</div>
               <h2>{authMode === "login" ? "Welcome back!" : "Create account"}</h2>
               {authMessage && <p className="auth-error">{authMessage}</p>}
-
               {authMode === "login" ? (
                 <form onSubmit={handleLogin}>
                   <input name="username" placeholder="Username" required />
