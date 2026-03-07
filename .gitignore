@@ -36,3 +36,15 @@ db.sqlite3
 
 # Node modules for frontend
 node_modules/
+
+# Media files (uploaded images)
+media/
+
+# Environment variables
+.env
+
+# VS Code
+.vscode/
+
+# Distribution / packaging
+dist/
