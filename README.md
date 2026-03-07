@@ -59,16 +59,6 @@ mini_e-commerce_web_app/
     └── package.json
 ```
 
----
-
-## ⚙️ Installation & Setup
-
-### Prerequisites
-- Python 3.12+
-- Node.js 18+
-- pip
-
----
 
 ### 🔧 Backend Setup
 
