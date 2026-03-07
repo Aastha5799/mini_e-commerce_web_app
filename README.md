@@ -59,7 +59,6 @@ mini_e-commerce_web_app/
     └── package.json
 ```
 
----
 
 ### 🔧 Backend Setup
 
