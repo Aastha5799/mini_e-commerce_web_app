@@ -11,7 +11,6 @@ from .serializers import (
     ProductSerializer, CartSerializer, OrderSerializer
 )
 
-
 # Helper — generate JWT tokens
 def get_tokens_for_user(user):
     refresh = RefreshToken.for_user(user)

@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure--62txauop4mh)h4b62^bls5605)p@z3^!fp57=v0b134sq=o#k
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [] #localhost
 CORS_ALLOW_ALL_ORIGINS = True
 AUTH_USER_MODEL = 'products.CustomerUser'
 
@@ -38,7 +38,7 @@ AUTH_USER_MODEL = 'products.CustomerUser'
 INSTALLED_APPS = [
     'corsheaders',
     'products',
-    'rest_framework',
+    'rest_framework',   #django rest framework for building APIs
     'rest_framework_simplejwt',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -54,7 +54,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',  #should be placed first, handle cors before any other middleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',

@@ -198,4 +198,3 @@ Admins can:
 - Make sure both backend and frontend servers are running at the same time
 - Product images are stored in `backend/media/products/`
 - SQLite database file: `backend/db.sqlite3`
-- To backup products: `python manage.py dumpdata products.Product --indent 2 > products_backup.json`
