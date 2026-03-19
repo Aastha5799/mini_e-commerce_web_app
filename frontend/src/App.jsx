@@ -241,7 +241,6 @@ function App() {
               <div className="cart-list">
                 {cart.map((item) => (
                   <div key={item.id} className="cart-item">
-                    <img src={item.product.image} alt={item.product.name} className="cart-img" />
                     <span className="cart-name">{item.product.name}</span>
                     <div className="qty-control">
                       <button onClick={() => updateQty(item.id, item.quantity - 1)}>−</button>
